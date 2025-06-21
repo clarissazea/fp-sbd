@@ -1,0 +1,67 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">📊 Dashboard Admin</h1>
+
+<!-- Statistik -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+  <div class="bg-white shadow rounded p-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Buku</h2>
+    <p class="text-3xl font-bold text-blue-700">{% if total_books %}{{ total_books }}{% else %}0{% endif %}</p>
+  </div>
+  <div class="bg-white shadow rounded p-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Anggota</h2>
+    <p class="text-3xl font-bold text-blue-700">{% if total_members %}{{ total_members }}{% else %}0{% endif %}</p>
+  </div>
+  <div class="bg-white shadow rounded p-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-2">Peminjaman Aktif</h2>
+    <p class="text-3xl font-bold text-blue-700">{% if active_borrows %}{{ active_borrows }}{% else %}0{% endif %}</p>
+  </div>
+</div>
+
+<!-- Tabel Data Peminjaman -->
+<h2 class="text-2xl font-semibold mb-4">📄 Riwayat Peminjaman Terbaru</h2>
+{%if borrowed_books %}
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white rounded shadow">
+    <thead class="bg-gray-100 text-left">
+      <tr>
+        <th class="px-4 py-2">Nama Anggota</th>
+        <th class="px-4 py-2">Judul Buku</th>
+        <th class="px-4 py-2">Tanggal Pinjam</th>
+        <th class="px-4 py-2">Batas Pengembalian</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2">Aksi</th>
+      </tr>
+    </thead>
+    <tbody> 
+      {% for borrow in borrowed_books %}     
+      <tr class="border-t">
+        <td class="px-4 py-2">{{borrow.11}}</td>
+        <td class="px-4 py-2">{{borrow.12}}</td>
+        <td class="px-4 py-2">{{borrow.3}}</td>
+        <td class="px-4 py-2">{{borrow.4}}</td>        
+        <td class="px-4 py-2">
+          <span class="{% if borrow.7 == 'borrowed' %}text-blue-600{% else %}text-green-600{% endif %} font-semibold">
+            {% if borrow.7 == 'borrowed' %}Dipinjam{% else %}Dikembalikan{% endif %}
+          </span>
+        </td>
+        <td class="px-4 py-2 space-x-2">       
+          {% if borrow.7 == 'borrowed' %} 
+            <a href="{% url 'admin_loan_return' 'return' borrow.0 %}" class="text-blue-600 hover:underline">Konfirmasi Pengembalian</a>
+          {% else %}
+            <span class="text-gray-500">Tidak ada aksi</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="bg-yellow-100 text-yellow-800 p-4 rounded">
+  <p class="text-lg">Belum ada riwayat peminjaman.</p>
+</div>
+{% endif %}
+
+{% endblock %}

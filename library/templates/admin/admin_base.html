@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="flex min-h-screen bg-gray-100">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-blue-800 text-white flex flex-col">
+    <div class="p-6 text-2xl font-bold border-b border-blue-700">
+      Admin Panel
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-4">
+      <a href="{% url 'admin_dashboard' %}" class="block py-2 px-4 rounded hover:bg-blue-700">🏠 Dashboard</a>
+      <a href="{% url 'admin_book_list' %}" class="block py-2 px-4 rounded hover:bg-blue-700">📘 Buku</a>
+      <a href="{% url 'admin_member_list' %}" class="block py-2 px-4 rounded hover:bg-blue-700">👥 Anggota</a>
+      <a href="{% url 'admin_loan_form' 'create' %}" class="block py-2 px-4 rounded hover:bg-blue-700">🔁 Peminjaman</a>      
+      <a href="{% url 'admin_loan_form' 'return' %}" class="block py-2 px-4 rounded hover:bg-blue-700">🔁 Pengembalian</a>      
+    </nav>
+
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-8">
+    {% block content %}
+    {% endblock %}
+  </main>
+</body>
+</html>

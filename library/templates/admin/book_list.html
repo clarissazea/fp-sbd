@@ -1,0 +1,54 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">📘 Daftar Buku</h1>
+
+<div class="mb-4">
+  <a href="{% url 'admin_book_form' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+    + Tambah Buku
+  </a>
+</div>
+
+{% if books %}
+<table class="min-w-full bg-white rounded shadow overflow-hidden">
+  <thead class="bg-gray-100 text-left">
+    <tr>
+      <th class="px-4 py-2">Judul</th>
+      <th class="px-4 py-2">Penulis</th>
+      <th class="px-4 py-2">Penerbit</th>
+      <th class="px-4 py-2">Tahun</th>
+      <th class="px-4 py-2">Stok Total</th>
+      <th class="px-4 py-2">Stok Tersisa</th>
+      <th class="px-4 py-2">Aksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% comment %} Dummy data sementara, ganti dengan looping dari backend/API {% endcomment %}
+    {% for book in books %}
+    <tr class="border-t">
+      <td class="px-4 py-2">{{ book.1 }}</td>
+      <td class="px-4 py-2">{{ book.2 }}</td>
+      <td class="px-4 py-2">{{ book.3 }}</td>
+      <td class="px-4 py-2">{{ book.4 }}</td>      
+      <td class="px-4 py-2">{{ book.6 }}</td>
+      <td class="px-4 py-2">{{ book.7 }}</td>      
+      <td class="px-4 py-2 space-x-2">
+        <a href="{% url 'admin_book_edit' book.0 %}" class="text-blue-600 hover:underline">Edit</a>
+        <form action="{% url 'admin_book_delete' book.0 %}" method="post" onsubmit="return confirm('Yakin ingin menghapus buku ini?');">
+          {% csrf_token %}
+          <button type="submit" class="text-red-600 hover:underline bg-transparent border-none p-0 m-0">Hapus</button>
+        </form>
+
+      </td>
+    </tr>
+    {% endfor %} 
+  </tbody>
+</table>
+{% else %}
+<div class="bg-yellow-100 text-yellow-800 p-4 rounded">
+  <p class="text-lg">Belum ada buku yang tersedia.</p>
+</div>
+{% endif %}
+
+
+{% endblock %}

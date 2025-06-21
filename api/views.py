@@ -16,7 +16,13 @@ def execute_sql(sql, params=(), fetch=False):
 
 # Buku
 def list_books(request):
-    books = execute_sql("SELECT * FROM books", fetch=True)
+    books = execute_sql(f"""
+            SELECT books.*, categories.category_name 
+            FROM books 
+            JOIN categories ON books.category_id = categories.category_id 
+            WHERE books.book_id = {request.GET.get('book_id', '0')}
+        """, fetch=True)
+    # books = cursor.fetchone()
     return JsonResponse(books, safe=False)
 
 @csrf_exempt
@@ -42,25 +48,4 @@ def create_user(request):
     )
     return JsonResponse({'message': 'User created'})
 
-# Peminjaman
-def list_loans(request):
-    loans = execute_sql("""
-        SELECT l.id, u.name, b.title, l.date_loaned, l.date_returned 
-        FROM loans l 
-        JOIN users u ON l.user_id = u.id 
-        JOIN books b ON l.book_id = b.id
-    """, fetch=True)
-    return JsonResponse(loans, safe=False)
 
-@csrf_exempt
-def borrow_book(request):
-    data = json.loads(request.body)
-    execute_sql("""
-        INSERT INTO loans (user_id, book_id, date_loaned) VALUES (?, ?, date('now'))
-    """, [data['user_id'], data['book_id']])
-    return JsonResponse({'message': 'Book borrowed'})
-
-@csrf_exempt
-def return_book(request, loan_id):
-    execute_sql("UPDATE loans SET date_returned = date('now') WHERE id = ?", [loan_id])
-    return JsonResponse({'message': 'Book returned'})

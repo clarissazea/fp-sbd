@@ -1,0 +1,67 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="container mx-auto max-w-md mt-10 p-6 bg-white shadow-md rounded">
+  {% if action == "create" %}
+    <h2 class="text-2xl font-bold mb-4">Formulir Peminjaman Buku</h2>
+
+    {# Tampilkan pesan error jika ada #}
+    {% if error %}
+      <div class="mb-4 p-3 bg-red-100 text-red-700 border border-red-400 rounded">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="member_id" class="block text-gray-700 font-medium mb-2">ID Member</label>
+        <input type="text" name="member_id" id="member_id" class="w-full px-3 py-2 border rounded" required>
+      </div>
+
+      <div class="mb-4">
+        <label for="book_id" class="block text-gray-700 font-medium mb-2">ID Buku</label>
+        <input type="text" name="book_id" id="book_id" class="w-full px-3 py-2 border rounded" required>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Pinjam Buku
+        </button>
+      </div>
+    </form>
+
+  {% elif action == "return" %}
+    <h2 class="text-2xl font-bold mb-4">Konfirmasi Pengembalian Buku</h2>
+
+    {% if error %}
+      <div class="mb-4 p-3 bg-red-100 text-red-700 border border-red-400 rounded">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <div class="mb-4">
+      <p><strong>ID Transaksi:</strong> {{ transaction.0 }}</p>
+      <p><strong>ID Member:</strong> {{ transaction.1 }}</p>
+      <p><strong>ID Buku:</strong> {{ transaction.2 }}</p>
+      <p><strong>Tanggal Pinjam:</strong> {{ transaction.3 }}</p>
+      <p><strong>Jatuh Tempo:</strong> {{ transaction.4 }}</p>
+    </div>
+
+    <div class="flex justify-between">
+      <a href="{% url 'admin_dashboard' %}" class="text-blue-500 hover:underline">Kembali</a>
+      <form method="post">
+        {% csrf_token %}
+        <div class="flex justify-end">
+          <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            Konfirmasi Pengembalian
+          </button>
+        </div>
+      </form>
+    </div>
+
+  {% else %}
+    <p class="text-red-500">{{ action }}</p>
+  {% endif %}
+</div>
+{% endblock %}

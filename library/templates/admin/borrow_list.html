@@ -1,0 +1,41 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">📘 Riwayat Pengembalian</h1>
+
+{% if transactions %}
+<table class="min-w-full bg-white rounded shadow overflow-hidden">
+  <thead class="bg-gray-100 text-left">
+    <tr>
+      <th class="px-4 py-2">Peminjam</th>
+      <th class="px-4 py-2">Judul Buku</th>
+      <th class="px-4 py-2">Tanggal Meminjam</th>
+      <th class="px-4 py-2">Tanggal Pengembalian</th>
+      <th class="px-4 py-2">Status Pengembalian</th>
+      <th class="px-4 py-2">Denda</th>
+      <th class="px-4 py-2">Status Denda</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% comment %} Dummy data sementara, ganti dengan looping dari backend/API {% endcomment %}
+    {% for transaction in transactions %}
+    <tr class="border-t">
+      <td class="px-4 py-2">{{ transaction.1 }}</td>
+      <td class="px-4 py-2">{{ transaction.2 }}</td>
+      <td class="px-4 py-2">{{ transaction.3 }}</td>
+      <td class="px-4 py-2">{{ transaction.4 }}</td>      
+      <td class="px-4 py-2">{% if transaction.5 == 'returned_late' %}Terlambat{% else %}Dikembalikan Tepat Waktu{% endif %}</td>
+      <td class="px-4 py-2">{% if transaction.6 %}Rp {{ transaction.6 }}{% else %}Tidak Ada Denda{% endif %}</td>
+      <td class="px-4 py-2">{% if transaction.7 == 'paid' %}Sudah Dibayar{% else %}Belum Dibayar{% endif %}</td>    
+    </tr>
+    {% endfor %} 
+  </tbody>
+</table>
+{% else %}
+<div class="bg-yellow-100 text-yellow-800 p-4 rounded">
+  <p class="text-lg">Belum ada riwayat pengembalian.</p>
+</div>
+{% endif %}
+
+
+{% endblock %}

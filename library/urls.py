@@ -16,8 +16,34 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from library.views import *
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
+    # user
     path('api/', include('api.urls')),
+    path('', home_page, name='home_page'),
+    path('book/<book_id>/', book_detail, name='book_detail'),
+    
+
+    # admin 
+    path('admin/', admin_dashboard, name='admin_dashboard'),
+
+     
+    # Buku
+    path('admin/books/', admin_book_list, name='admin_book_list'),
+    path('admin/books/add/', admin_book_form, name='admin_book_form'),
+    path('admin/books/edit/<book_id>', admin_book_form, name='admin_book_edit'),
+    path('admin/books/delete/<book_id>', admin_book_delete, name='admin_book_delete'),
+
+    # Member
+    path('admin/members/', admin_member_list, name='admin_member_list'),
+    path('admin/members/add/', admin_member_form, name='admin_member_form'),
+    path('admin/members/edit/<member_id>/', admin_member_form, name='admin_member_edit'),
+    path('admin/members/delete/<member_id>/', admin_member_delete, name='admin_member_delete'),
+
+    # Peminjaman
+    path('admin/borrow/<action>/', admin_loan_form, name='admin_loan_form'),
+    path('admin/borrow/<action>/<transaction_id>/', admin_loan_form, name='admin_loan_return'),
+    path('admin/borrow/<action>/', admin_loan_form, name='admin_loan_list'),
 ]

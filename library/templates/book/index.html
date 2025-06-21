@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Landing Page</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Hero Section -->
+  <section class="bg-blue-800 text-white py-12 px-6 text-center">
+    <h1 class="text-4xl font-bold mb-4">Selamat Datang di Perpustakaan Digital</h1>
+    <p class="text-lg">Temukan buku favoritmu dan lihat rekomendasi terbaik dari kami</p>
+  </section>
+
+  <!-- All Books Section -->
+    <section class="px-6 py-8">
+    <h2 class="text-2xl font-semibold mb-4">📚 Semua Buku</h2>
+
+        {% if all_books %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% for b in all_books %}
+                
+                  <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 class="text-lg font-bold">
+                            {{ b.1 }} <span class="font-normal text-sm text-gray-700">| {{ b.2 }}</span>
+                        </h3>                        
+                        <br>
+                        <p class="text-sm text-gray-600">{{ b.3 }}</p>
+                        <p class="text-sm text-gray-600">{{ b.4 }}</p>
+                        <a href="{% url 'book_detail' b.0 %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                            Lihat Detail
+                        </a>
+                      </div>
+                      <img src="{{ b.5 }}" alt="{{ b.1 }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+                  </div>                  
+                </div>             
+            {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500">Tidak ada buku yang tersedia saat ini.</p>
+        {% endif %}
+    </section>
+   
+
+  <!-- Top 5 Buku Populer -->
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-semibold mb-4">🔥 Top 5 Buku Terpopuler</h2>
+    {% if popular_books %}
+    <ul class="space-y-2">
+      {# for b in popular_books #}
+      <li class="bg-white p-4 rounded shadow">
+        <span class="font-semibold">{{ b.1 }}</span> — Dipinjam {{ b.2 }} kali
+      </li>
+      {# endfor #}
+    </ul>
+    {% else %}
+        <p class="text-gray-500">Belum ada buku yang terdaftar.</p>
+    {% endif %}
+  </section>
+
+  <!-- Buku Lama -->
+  <section class="px-6 py-8">
+    <h2 class="text-2xl font-semibold mb-4">📖 Buku Tahun Terbit Lama</h2>
+    {% if old_books %}
+    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {# for b in old_books #}
+      <li class="bg-white p-4 rounded shadow">
+        <p class="font-semibold">{{ b.1 }}</p>
+        <p class="text-sm text-gray-600">Terbit: {{ b.3 }}</p>
+      </li>
+      {# endfor #}
+    </ul>
+    {% else %}
+        <p class="text-gray-500">Belum ada buku yang terdaftar</p>
+    {% endif %}
+  </section>
+
+  <!-- Buku Terbaru -->
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-semibold mb-4">🆕 Buku Terbaru</h2>
+    {% if new_books %}
+    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {# for b in new_books #}
+      <li class="bg-white p-4 rounded shadow">
+        <p class="font-semibold">{{ b.1 }}</p>
+        <p class="text-sm text-gray-600">Terbit: {{ b.3 }}</p>
+      </li>
+      {# endfor #}
+    </ul>
+    {% else %}
+        <p class="text-gray-500">Belum ada buku terbaru yang terdaftar</p>
+    {% endif %}
+  </section>
+
+  <!-- Rekomendasi Berdasarkan Kategori -->
+  <section class="px-6 py-8">
+    <h2 class="text-2xl font-semibold mb-4">🎯 Rekomendasi Berdasarkan Kategori</h2>
+    {% if category_reco %}
+    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {# for b in category_reco #}
+      <li class="bg-white p-4 rounded shadow">
+        <p class="font-semibold">{{ b.1 }}</p>
+        <p class="text-sm text-gray-600">Kategori: {{ b.2 }}</p>
+      </li>
+      {# endfor #}
+    </ul>
+    {% else %}
+        <p class="text-gray-500">Belum ada buku yang terdaftar</p>
+    {% endif %}
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-sm text-gray-500">
+    &copy; {{ now|date:"Y" }} Perpustakaan Digital. All rights reserved.
+  </footer>
+
+</body>
+</html>
