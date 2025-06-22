@@ -8,14 +8,26 @@
 <body class="bg-gray-50 text-gray-800">
 
   <!-- Hero Section -->
-  <section class="bg-blue-800 text-white py-12 px-6 text-center">
-    <h1 class="text-4xl font-bold mb-4">Selamat Datang di Perpustakaan Digital</h1>
+  <section class="bg-blue-800 text-white py-6 px-6 text-center">
+    <h1 class="text-4xl font-bold m-4">Selamat Datang di Perpustakaan Digital</h1>
     <p class="text-lg">Temukan buku favoritmu dan lihat rekomendasi terbaik dari kami</p>
+    <form action="{% url 'search_books' %}" method="get" class="max-w-md mx-auto flex gap-2">
+        <input
+        type="text"
+        name="q"
+        placeholder="Cari judul buku..."
+        class="w-full px-4 py-2 rounded-lg text-black bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        required
+        >
+        <a href="/book" class="w-[40%] bg-blue-600 text-center text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex">
+          Lihat Semua
+        </a>
+    </form>
   </section>
 
   <!-- All Books Section -->
     <section class="px-6 py-8">
-    <h2 class="text-2xl font-semibold mb-4">📚 Semua Buku</h2>
+    <h2 class="text-2xl font-bold mb-4">📚 Semua Buku</h2>
 
         {% if all_books %}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -25,16 +37,16 @@
                     <div class="grid grid-cols-2 gap-4">
                       <div>
                         <h3 class="text-lg font-bold">
-                            {{ b.1 }} <span class="font-normal text-sm text-gray-700">| {{ b.2 }}</span>
+                            {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
                         </h3>                        
                         <br>
-                        <p class="text-sm text-gray-600">{{ b.3 }}</p>
-                        <p class="text-sm text-gray-600">{{ b.4 }}</p>
-                        <a href="{% url 'book_detail' b.0 %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                        <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                        <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                        <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
                             Lihat Detail
                         </a>
                       </div>
-                      <img src="{{ b.5 }}" alt="{{ b.1 }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+                      <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
                   </div>                  
                 </div>             
             {% endfor %}
@@ -44,74 +56,231 @@
         {% endif %}
     </section>
    
-
-  <!-- Top 5 Buku Populer -->
+  {% if weekly_recommendation|length > 0 %}
   <section class="px-6 py-8 bg-gray-100">
-    <h2 class="text-2xl font-semibold mb-4">🔥 Top 5 Buku Terpopuler</h2>
-    {% if popular_books %}
-    <ul class="space-y-2">
-      {# for b in popular_books #}
-      <li class="bg-white p-4 rounded shadow">
-        <span class="font-semibold">{{ b.1 }}</span> — Dipinjam {{ b.2 }} kali
-      </li>
-      {# endfor #}
-    </ul>
-    {% else %}
-        <p class="text-gray-500">Belum ada buku yang terdaftar.</p>
-    {% endif %}
-  </section>
+    <h2 class="text-2xl font-bold mb-4">📆 Rekomendasi Minggu Ini</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in weekly_recommendation %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="text-sm text-green-700">✅ Dipinjam {{ b.weekly_borrow }} kali minggu ini</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
 
-  <!-- Buku Lama -->
-  <section class="px-6 py-8">
-    <h2 class="text-2xl font-semibold mb-4">📖 Buku Tahun Terbit Lama</h2>
-    {% if old_books %}
-    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {# for b in old_books #}
-      <li class="bg-white p-4 rounded shadow">
-        <p class="font-semibold">{{ b.1 }}</p>
-        <p class="text-sm text-gray-600">Terbit: {{ b.3 }}</p>
-      </li>
-      {# endfor #}
-    </ul>
-    {% else %}
-        <p class="text-gray-500">Belum ada buku yang terdaftar</p>
-    {% endif %}
-  </section>
-
-  <!-- Buku Terbaru -->
+  {% if top_per_category|length > 0 %}
   <section class="px-6 py-8 bg-gray-100">
-    <h2 class="text-2xl font-semibold mb-4">🆕 Buku Terbaru</h2>
-    {% if new_books %}
-    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {# for b in new_books #}
-      <li class="bg-white p-4 rounded shadow">
-        <p class="font-semibold">{{ b.1 }}</p>
-        <p class="text-sm text-gray-600">Terbit: {{ b.3 }}</p>
-      </li>
-      {# endfor #}
-    </ul>
-    {% else %}
-        <p class="text-gray-500">Belum ada buku terbaru yang terdaftar</p>
-    {% endif %}
-  </section>
+    <h2 class="text-2xl font-bold mb-4">Rekomendasi berdasarkan genre</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in top_per_category %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="text-sm text-green-700">Rating tertinggi genre {{ b.category }}</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
 
-  <!-- Rekomendasi Berdasarkan Kategori -->
-  <section class="px-6 py-8">
-    <h2 class="text-2xl font-semibold mb-4">🎯 Rekomendasi Berdasarkan Kategori</h2>
-    {% if category_reco %}
-    <ul class="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {# for b in category_reco #}
-      <li class="bg-white p-4 rounded shadow">
-        <p class="font-semibold">{{ b.1 }}</p>
-        <p class="text-sm text-gray-600">Kategori: {{ b.2 }}</p>
-      </li>
-      {# endfor #}
-    </ul>
-    {% else %}
-        <p class="text-gray-500">Belum ada buku yang terdaftar</p>
-    {% endif %}
-  </section>
+  {% if most_borrowed|length > 0 %}
+    <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">🔥 Top 3 Buku Paling Sering Dipinjam</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in most_borrowed %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="text-sm text-gray-600">{{ b.borrow_count }}x Dipinjam</p>                 
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
 
+  {% if rated_books|length > 0 %}
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">⭐ Top 3 Buku Rating Tertinggi</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in rated_books %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="mt-1 text-sm text-yellow-600">⭐ {{ b.avg_rating }} / 5 ( {{ b.total_reviews}} review )</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
+
+  {% if newest_books|length > 0 %}
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">🆕 Buku Terbaru Ditambahkan</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in newest_books %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="mt-1 text-sm text-gray-600">Belum lama Ditambahkan</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
+
+  {% if newest_published|length > 0 %}
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">📅 Buku Terbaru Terbit</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in newest_published %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="mt-1 text-sm text-gray-600">Publish pada {{b.year_published}}</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
+
+  {% if classic_books|length > 0 %}
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">🕰️ Buku Klasik</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in classic_books %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="mt-1 text-sm text-gray-600">Publish pada {{b.year_published}}</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
+
+  {% if most_reviewed|length > 0 %}
+  <section class="px-6 py-8 bg-gray-100">
+    <h2 class="text-2xl font-bold mb-4">💬 Buku dengan Review Terbanyak</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for b in most_reviewed %}
+          <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 class="text-lg font-bold">
+                      {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                  </h3>       
+                  <p class="mt-1 text-sm text-gray-600">{{b.total_reviews}} orang telah memberi ulasan</p>
+                  <br>
+                  <br>
+                  <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                  <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                  <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                      Lihat Detail
+                  </a>
+                </div>
+                <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+            </div>                  
+          </div>      
+        {% endfor %}
+      </div>    
+    </section>
+  {% endif %}
+
+  
   <!-- Footer -->
   <footer class="text-center py-6 text-sm text-gray-500">
     &copy; {{ now|date:"Y" }} Perpustakaan Digital. All rights reserved.

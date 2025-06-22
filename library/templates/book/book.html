@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Landing Page</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Hero Section -->
+  <section class="bg-blue-800 text-white py-6 px-6 text-center">
+    <h1 class="text-4xl font-bold m-4">Selamat Datang di Perpustakaan Digital</h1>
+    <p class="text-lg">Temukan buku favoritmu dan lihat rekomendasi terbaik dari kami</p>
+    <form action="{% url 'search_books' %}" method="get" class="max-w-md mx-auto flex gap-2">
+        <input
+        type="text"
+        name="q"
+        placeholder="Cari judul buku..."
+        class="w-full px-4 py-2 rounded-lg text-black bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        required
+        >
+        <a href="/" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+          Kembali
+        </a>
+    </form>
+  </section>
+
+  <!-- All Books Section -->
+    <section class="px-6 py-8">
+    <h2 class="text-2xl font-semibold mb-4">📚 Semua Buku</h2>
+
+        {% if all_books %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% for b in all_books %}
+                
+                  <div class="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 class="text-lg font-bold">
+                            {{ b.title }} <span class="font-normal text-sm text-gray-700">| {{ b.author }}</span>
+                        </h3>                        
+                        <br>
+                        <p class="text-sm text-gray-600">{{ b.publisher }}</p>
+                        <p class="text-sm text-gray-600">{{ b.year_published }}</p>
+                        <a href="{% url 'book_detail' b.book_id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                            Lihat Detail
+                        </a>
+                      </div>
+                      <img src="{{ b.image }}" alt="{{ b.title }}" class="w-full h-48 object-cover rounded-lg mb-2">                  
+                  </div>                  
+                </div>             
+            {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500 text-center">Tidak ada buku yang tersedia saat ini.</p>
+        {% endif %}
+    </section>
+   
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-sm text-gray-500">
+    &copy; {{ now|date:"Y" }} Perpustakaan Digital. All rights reserved.
+  </footer>
+
+</body>
+</html>

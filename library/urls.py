@@ -21,9 +21,14 @@ from library.views import *
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # user
-    path('api/', include('api.urls')),
+    # path('api/', include('api.urls')),
+
+    # user
     path('', home_page, name='home_page'),
+    path('book/', book_page, name='book_page'),
+    path('book/search/', search_books, name='search_books'),
     path('book/<book_id>/', book_detail, name='book_detail'),
+    path('book/review/<book_id>/', add_review, name='book_review'),
     
 
     # admin 
@@ -33,8 +38,8 @@ urlpatterns = [
     # Buku
     path('admin/books/', admin_book_list, name='admin_book_list'),
     path('admin/books/add/', admin_book_form, name='admin_book_form'),
-    path('admin/books/edit/<book_id>', admin_book_form, name='admin_book_edit'),
-    path('admin/books/delete/<book_id>', admin_book_delete, name='admin_book_delete'),
+    path('admin/books/edit/<book_id>/', admin_book_form, name='admin_book_edit'),
+    path('admin/books/delete/<book_id>/', admin_book_delete, name='admin_book_delete'),
 
     # Member
     path('admin/members/', admin_member_list, name='admin_member_list'),

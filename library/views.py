@@ -1,32 +1,19 @@
-# from django.shortcuts import render
-
-# def home_page(request):
-#     return render(request, 'index.html')  
-
-# def admin_page(request):
-#     return render(request, 'admin/index.html')
-
-# def book_page(request):
-# return render(request, 'book/detail.html')
-
-# def book_detail(request, book_id):
-#     # Here you would typically fetch the book details from the database using the book_id
-#     # For demonstration, we'll just return a placeholder response
-#     context = {
-#         'book_id': book_id,
-#         'title': 'Sample Book Title',
-#         'author': 'Sample Author',
-#         'description': 'This is a sample description of the book.'
-#     }
-#     return render(request, 'book/detail.html', context)
-
 from django.shortcuts import render
 from django.db import connection
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+import datetime
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .mongo import reviews_collection
 
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a list of dicts"
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 def generate_new_book_id(cursor):
     cursor.execute("SELECT book_id FROM books ORDER BY book_id DESC LIMIT 1")
@@ -42,54 +29,215 @@ def generate_new_book_id(cursor):
     return f"B{new_num:03}"
 
 
+
 def home_page(request):
     with connection.cursor() as cursor:
-        # Semua buku
-        cursor.execute("SELECT * FROM books")
-        all_books = cursor.fetchall()
+        # 1. Buku paling sering dipinjam
+        cursor.execute("""
+            SELECT b.*,borrow_count
+            FROM books b
+            JOIN (
+                SELECT book_id, COUNT(*) AS borrow_count
+                FROM transactions
+                GROUP BY book_id
+                ORDER BY borrow_count DESC
+                LIMIT 3
+            ) t ON b.book_id = t.book_id
+        """)
+        most_borrowed = dictfetchall(cursor)
 
-        # Top 5 buku terpopuler
-        # cursor.execute("""
-        #     SELECT b.id, b.judul, COUNT(l.id) AS jumlah_pinjam
-        #     FROM library_app_loan l
-        #     JOIN library_app_book b ON l.book_id = b.id
-        #     GROUP BY b.id
-        #     ORDER BY jumlah_pinjam DESC
-        #     LIMIT 5
-        # """)
-        # popular_books = cursor.fetchall()
+        cursor.execute("""
+            SELECT * FROM books LIMIT 4
+        """)
+        all_books = dictfetchall(cursor)
 
-        # Buku tahun terbit lama
-        # cursor.execute("""
-        #     SELECT * FROM library_app_book ORDER BY tahun ASC LIMIT 5
-        # """)
-        old_books = cursor.fetchall()
+        # 3. Buku terbaru ditambahkan (by book_id DESC)
+        cursor.execute("SELECT * FROM books ORDER BY book_id DESC LIMIT 3")
+        newest_books = dictfetchall(cursor)
 
-        # Buku terbaru
-        # cursor.execute("""
-        #     SELECT * FROM library_app_book ORDER BY tahun DESC LIMIT 5
-        # """)
-        # new_books = cursor.fetchall()
+        # 5. Buku baru terbit
+        cursor.execute("SELECT * FROM books ORDER BY year_published DESC LIMIT 3")
+        newest_published = dictfetchall(cursor)
 
-        # Top buku per kategori (1 buku per kategori sebagai contoh)
-        # cursor.execute("""
-        #     SELECT b1.id, b1.judul, b1.kategori FROM library_app_book b1
-        #     WHERE b1.id IN (
-        #         SELECT b2.id FROM library_app_book b2
-        #         WHERE b2.kategori IS NOT NULL
-        #         GROUP BY b2.kategori
-        #         ORDER BY MAX(b2.tahun) DESC
-        #     )
-        #     LIMIT 5
-        # """)
-        # category_reco = cursor.fetchall()
+        # 6. Buku klasik
+        cursor.execute("SELECT * FROM books ORDER BY year_published ASC LIMIT 3")
+        classic_books = dictfetchall(cursor)
+
+        # 8. Rekomendasi minggu ini (dipinjam dalam 7 hari terakhir)
+        cursor.execute("""
+            SELECT b.*, weekly_borrow
+            FROM books b
+            JOIN (
+                SELECT book_id, COUNT(*) AS weekly_borrow
+                FROM transactions
+                WHERE borrow_date >= CURDATE() - INTERVAL 7 DAY
+                GROUP BY book_id
+                ORDER BY weekly_borrow DESC
+                LIMIT 3
+            ) t ON b.book_id = t.book_id
+        """)
+        weekly_recommendation = dictfetchall(cursor)
+
+    # 2. Buku rating tertinggi (MongoDB)
+    top_rated = list(
+        reviews_collection.aggregate([
+            {"$group": {
+                "_id": "$book_id",
+                "avg_rating": {"$avg": "$rating"},
+                "review_count": {"$sum": 1}
+            }},
+            {"$sort": {"avg_rating": -1}},
+            {"$limit": 3}
+        ])
+    )
+    # Ambil detail buku dari SQL berdasarkan book_id
+    rated_books = []
+    with connection.cursor() as cursor:
+        for doc in top_rated:
+            cursor.execute("SELECT * FROM books WHERE book_id = %s", [doc["_id"]])
+            result = cursor.fetchone()
+            if result:
+                rated_books.append({
+                    "book_id": result[0],
+                    "title": result[1],
+                    "author": result[2],
+                    "publisher": result[3],
+                    "year_published": result[4],
+                    "image": result[5],
+                    "available_copies": result[7],
+                    "avg_rating": round(doc["avg_rating"],2),
+                    "total_reviews": doc["review_count"]
+                })
+
+    # 7. Buku dengan review terbanyak
+    most_reviewed_raw = list(
+        reviews_collection.aggregate([
+            {"$group": {
+                "_id": "$book_id",
+                "total_reviews": {"$sum": 1}
+            }},
+            {"$sort": {"total_reviews": -1}},
+            {"$limit": 3}
+        ])
+    )
+    most_reviewed = []
+    with connection.cursor() as cursor:
+        for doc in most_reviewed_raw:
+            cursor.execute("SELECT * FROM books WHERE book_id = %s", [doc["_id"]])
+            result = cursor.fetchone()
+            if result:
+                most_reviewed.append({
+                    "book_id": result[0],
+                    "title": result[1],
+                    "author": result[2],
+                    "publisher": result[3],
+                    "year_published": result[4],
+                    "image": result[5],
+                    "available_copies": result[7],
+                    "total_reviews": doc["total_reviews"]
+                })
+    # 4. Top 1 rating per kategori
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT category_id, category_name FROM categories")
+        all_categories = dictfetchall(cursor)
+
+    top_per_category = []
+
+    for cat in all_categories:
+        # Get all book_id for this category
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT book_id
+                FROM book_categories
+                WHERE category_id = %s
+            """, [cat["category_id"]])
+            book_ids = [row[0] for row in cursor.fetchall()]
+
+        if not book_ids:
+            continue
+
+        # Find top rated book from these book_ids in MongoDB
+        top_book = reviews_collection.aggregate([
+            {"$match": {"book_id": {"$in": book_ids}}},
+            {"$group": {
+                "_id": "$book_id",
+                "avg_rating": {"$avg": "$rating"},
+                "review_count": {"$sum": 1}
+            }},
+            {"$sort": {"avg_rating": -1}},
+            {"$limit": 1}
+        ])
+        top_book = list(top_book)
+        if not top_book:
+            continue
+
+        top_book = top_book[0]
+        top_id = top_book["_id"]
+
+        # Get full detail of that book
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM books WHERE book_id = %s", [top_id])
+            result = cursor.fetchone()
+            if result:
+                top_per_category.append({
+                    "book_id": result[0],
+                    "title": result[1],
+                    "author": result[2],
+                    "publisher": result[3],
+                    "year_published": result[4],
+                    "image": result[5],
+                    "avg_rating": round(top_book["avg_rating"], 2),
+                    "review_count": top_book["review_count"],
+                    "category": cat["category_name"]
+                })
+
 
     return render(request, "book/index.html", {
         "all_books": all_books,
-        # "popular_books": popular_books,
-        # "old_books": old_books,
-        # "new_books": new_books,
-        # "category_reco": category_reco
+        "most_borrowed": most_borrowed,
+        "rated_books": rated_books,
+        "newest_books": newest_books,
+        "top_per_category": top_per_category,
+        "newest_published": newest_published,
+        "classic_books": classic_books,
+        "most_reviewed": most_reviewed,
+        "weekly_recommendation": weekly_recommendation,
+    })
+
+
+def search_books(request):
+    query = request.GET.get('q', '').strip()
+    results = []
+
+    if query:
+        sql = """
+            SELECT * FROM books
+            WHERE LOWER(title) LIKE %s
+               OR LOWER(author) LIKE %s
+               OR LOWER(publisher) LIKE %s
+        """
+        like_pattern = f"%{query.lower()}%"
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [like_pattern, like_pattern, like_pattern])
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'book/book.html', {
+        'query': query,
+        'all_books': results
+    })
+
+def book_page(request):
+    with connection.cursor() as cursor:
+        # Semua buku
+        cursor.execute("""
+            SELECT * FROM books
+        """)
+        all_books = dictfetchall(cursor)
+
+        
+    return render(request, "book/book.html", {
+        "all_books": all_books,
     })
 
 
@@ -110,12 +258,48 @@ def book_detail(request, book_id):
         """, [book_id])
         book = cursor.fetchone()
         if book:
-            avg_rating = book[7] // book[8] if book[8] > 0 else 0  
+            avg_rating = book[8] / book[9] if book[9] > 0 else 0  
         
     return render(request, "book/detail.html", {
         "book": book,
-        "avg_rating": avg_rating
+        "avg_rating": avg_rating,
+        "round_avg_rating": round(avg_rating) if avg_rating else 0,
+        "reviews": list(reviews_collection.find({"book_id": book_id}).sort("created_at", -1))
     })
+
+
+@require_http_methods(["POST"])
+def add_review(request, book_id):
+    # if request.method == "POST":
+    rating = request.POST.get("rating")
+    comment = request.POST.get("comment")
+
+    if rating:
+        with connection.cursor() as cursor:
+            # Ambil data lama
+            cursor.execute("SELECT total_ratings, total_reviews FROM books WHERE book_id = %s", [book_id])
+            result = cursor.fetchone()
+            if result:
+                old_total_rating, old_total_reviews = result
+                new_total_reviews = old_total_reviews + 1
+                new_total_rating = old_total_rating + int(rating)
+
+                cursor.execute("""
+                    UPDATE books
+                    SET total_ratings = %s, total_reviews = %s
+                    WHERE book_id = %s
+                    """, [new_total_rating, new_total_reviews, book_id])
+
+                review = {
+                    "book_id": book_id,
+                    "rating": int(rating),
+                    "comment": comment,
+                    "created_at": datetime.datetime.utcnow()
+                }
+                reviews_collection.insert_one(review)
+    return redirect("book_detail", book_id=book_id)
+
+
 
 # Dashboard opsional
 def admin_dashboard(request):    

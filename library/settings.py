@@ -86,6 +86,10 @@ DATABASES = {
     }
 }
 
+MONGO_DB_NAME = "fp_sbd_kel4"
+MONGO_URI = "mongodb://localhost:27017/"
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
