@@ -14,6 +14,7 @@
       <th class="px-4 py-2">Status Pengembalian</th>
       <th class="px-4 py-2">Denda</th>
       <th class="px-4 py-2">Status Denda</th>
+      <th class="px-4 py-2">Aksi</th>
     </tr>
   </thead>
   <tbody>
@@ -27,6 +28,13 @@
       <td class="px-4 py-2">{% if transaction.5 == 'returned_late' %}Terlambat{% else %}Dikembalikan Tepat Waktu{% endif %}</td>
       <td class="px-4 py-2">{% if transaction.6 %}Rp {{ transaction.6 }}{% else %}Tidak Ada Denda{% endif %}</td>
       <td class="px-4 py-2">{% if transaction.7 == 'paid' %}Sudah Dibayar{% else %}Belum Dibayar{% endif %}</td>    
+      <td class="px-4 py-2 space-x-2"> 
+      {% if transaction.7 == 'unpaid' %} 
+            <a href="{% url 'admin_fine_confirm' transaction.0 %}" class="text-blue-600 hover:underline">Konfirmasi Denda</a>
+      {% else %}
+        <span class="text-gray-500">Tidak ada aksi</span>
+      {% endif %}
+      </td>
     </tr>
     {% endfor %} 
   </tbody>

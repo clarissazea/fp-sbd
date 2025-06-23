@@ -654,3 +654,25 @@ def admin_loan_form(request, action, transaction_id=None):
 
         else:
             return HttpResponseBadRequest("Aksi tidak valid atau ID transaksi tidak diberikan.")
+
+
+def admin_paid_confirm(request, transaction_id):
+    with connection.cursor() as cursor:
+        # Cek apakah transaksi dengan ID tersebut ada
+        cursor.execute("SELECT status_fine FROM transactions WHERE transaction_id = %s", [transaction_id])
+        row = cursor.fetchone()
+
+        if not row:
+            messages.error(request, f"Transaksi dengan ID #{transaction_id} tidak ditemukan.")
+            return redirect("admin_loan_list",action="return")
+
+        current_status = row[0]
+        if current_status == 'paid':
+            messages.warning(request, f"Transaksi #{transaction_id} sudah dikonfirmasi sebelumnya.")
+            return redirect("admin_loan_list",action="return")
+
+        # Update status menjadi 'paid'
+        cursor.execute("UPDATE transactions SET status_fine = 'paid' WHERE transaction_id = %s", [transaction_id])
+        messages.success(request, f"Transaksi #{transaction_id} berhasil dikonfirmasi sebagai LUNAS.")
+
+    return redirect("admin_loan_list",action="return")

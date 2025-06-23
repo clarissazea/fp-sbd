@@ -51,4 +51,6 @@ urlpatterns = [
     path('admin/borrow/<action>/', admin_loan_form, name='admin_loan_form'),
     path('admin/borrow/<action>/<transaction_id>/', admin_loan_form, name='admin_loan_return'),
     path('admin/borrow/<action>/', admin_loan_form, name='admin_loan_list'),
+
+    path('admin/paid/<transaction_id>/', admin_paid_confirm, name='admin_fine_confirm'),
 ]
